@@ -64,6 +64,7 @@ class Package extends MX_Controller {
 			$data['result'] = $arr;
 		}
 		
+		$data['id'] = $this->uri->segment(4);
 		//die(print_r($data));
 		
 		$data['mode'] = $mode;
@@ -102,7 +103,7 @@ class Package extends MX_Controller {
 			//die(print_r($arr));
         
 			foreach ($arr as $key => $field) {
-				$arr[$key]['product'] = $this->qms_model->getProductName($arr[$key]['product_id']);
+				$arr[$key]['product'] = $this->qms_model->getProductName2($arr[$key]['product_id']);
 				$arr[$key]['action'] = "<a class='remove' href='#'><i class='glyphicon glyphicon-remove'></a>";
 			}
 			
@@ -134,6 +135,8 @@ class Package extends MX_Controller {
 			//mode update;
 			$data['discount'] = ($data['discount']/100); //percentage
 			
+			// echo $data['discount'];
+			// die;
 			$this->db->where('id', $data['id']);
 			$query = $this->db->update('m_package' ,$data);
 			if($query) $res = 'Update Success';
@@ -141,6 +144,43 @@ class Package extends MX_Controller {
 		}
 		
 		die($res);
+	}
+	
+	public function saveDetail(){
+		foreach($_POST as $key => $value){
+			$data[$key] = $this->input->post($key);
+		}
+		if ($this->uri->segment(3) !== FALSE){
+			$data['id_header'] = $this->uri->segment(4);
+			
+			if($data['product_id']=='') die('Product Empty !');		
+			if($data['qty']=='') die('Qty Empty !');
+
+			if($this->qms_model->cekProductPackageById($data['id_header'],$data['product_id'])){
+				die('This product already exists!');
+			}
+			
+			if ($data['id'] == '' || $data['id'] == null){
+				//mode insert;
+				
+				$data['created_by'] = USER_ID;
+				$data['date_created'] = Date('Y-m-d');
+				
+				$this->qms_model->submitTableData('mpd',$data);
+				$res = "Insert Success";
+			}
+			else{
+				//mode update;
+				
+				$this->db->where('id', $data['id']);
+				$query = $this->db->update('mpd' ,$data);
+				if($query) $res = 'Update Success';
+				else $res = 'Update Error';
+			}
+			
+			die($res);
+		}
+		else die('no parameter found !');
 	}
 	
 	public function getAllPackage(){

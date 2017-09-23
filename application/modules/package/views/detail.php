@@ -1,3 +1,6 @@
+<?php
+	// echo 'id = ' . $id;
+?>
 <section class="content-header">
     <h1><small>Form Package Detail</small></h1>
     <ol class="breadcrumb">
@@ -42,10 +45,14 @@
 			data: formData,
 			contentType: false,
 			processData: false,
-			url: "<?php echo base_url();?>package/saveDetail",
+			url: "<?php echo base_url();?>package/saveDetail/id_header/<?php echo $id; ?>",
 				success: function(response) {
-					alert(response);
-					window.open("<?php echo base_url(); ?>package",'_parent');
+					if (response.match(/This product.*/)) {
+						alert(response);
+					}else{
+						alert(response);
+						window.open("<?php echo base_url(); ?>package/form/id/<?php echo $id; ?>",'_parent');
+					}
 				},
 				error: function(response){
 					alert(response);

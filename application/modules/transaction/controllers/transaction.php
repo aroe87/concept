@@ -44,11 +44,16 @@ class Transaction extends MX_Controller {
 		
 		
 		
-		$arr = $this->qms_model->getInventoryProduct();
+		$arr = $this->qms_model->getInventoryProduct3();
 		
 		foreach($arr as $key => $value){
-			$product[$key]['id'] = $arr[$key]['id'];
-			$product[$key]['text'] = $this->qms_model->getProductName($arr[$key]['product_id'])." - ".$arr[$key]['total'];
+			$product[$key]['id'] = $arr[$key]['product_id'];
+			if($arr[$key]['tipe'] == 'Non Package')
+				$product_name = $this->qms_model->getProductName(substr($arr[$key]['product_id'],2));
+			else
+				$product_name = $this->qms_model->getPackageName(substr($arr[$key]['product_id'],2));
+
+			$product[$key]['text'] = $product_name." - ".$arr[$key]['tipe']." - ".$arr[$key]['total'];
 		}
 		
 		$data['all_product'] = json_encode($product);
@@ -64,12 +69,9 @@ class Transaction extends MX_Controller {
     public function getData() {
 		if ($this->uri->segment(3) !== FALSE){
 			$id_header = $this->uri->segment(4);
-			$arr = $this->qms_model->getTransactionDetail($id_header);
-			
-			foreach($arr as $key => $value){
-				$arr[$key]['product'] = $this->qms_model->getProductName($arr[$key]['product_id']);
-			}
-		}
+			$arr = $this->reload($id_header);
+		}else
+			$arr = array();
 		
         echo json_encode($arr);
     }
@@ -88,6 +90,15 @@ class Transaction extends MX_Controller {
 			} */
 		
 			echo $res;
+		}
+    }
+	
+	public function getPrice2() {
+        if ($this->uri->segment(3) !== FALSE){
+			$receive_id = $this->uri->segment(4);
+			$res = $this->qms_model->getAllPrice2($receive_id);
+
+			echo json_encode($res);
 		}
     }
 	
@@ -131,35 +142,155 @@ class Transaction extends MX_Controller {
 		//die(print_r($data));
 		if ($this->uri->segment(3) !== FALSE){
 			$order_no = $this->uri->segment(4);
-			
+
 			$data['id_header'] = $this->qms_model->getOrderID($order_no);
 		}
+
+		// echo $data['id'];
+		// die;
 		
 		if ($data['id'] == '' || $data['id'] == null){
 			//mode insert;
 			$receive_id = $data['product_id'];
-			$qty_on_hand = $this->qms_model->getQtyOnHand($receive_id);
-			
-			$rsd['qty_on_hand'] = $qty_on_hand - $data['qty'];
-				
-			if($rsd['qty_on_hand'] >= 0){
-				$data['product_id'] = $this->qms_model->getProductID($data['product_id']);
+			$tipe = substr($receive_id,0,2);
+			$receive_id = substr($receive_id,2);
+
+			$data['tipe'] = $tipe;
+			$data['product_id'] = $receive_id;
+
+			if($tipe == 'NP'){
+				$qty_on_hand = $this->qms_model->getQtyOnHand2($receive_id);
+				$rsd['qty_on_hand'] = $qty_on_hand - $data['qty'];
+				$qty = $data['qty'];
+				// die(echo $receive_id);
+				if($rsd['qty_on_hand'] >= 0){
+					// $data['product_id'] = $this->qms_model->getProductID($data['product_id']);
+					$this->qms_model->submitTableData('order_detail',$data);
+					
+					for($i=0;$i<100;$i++){
+						//Update looping disini
+						$cek_qty_on_hand = $this->qms_model->cekQtyOnHand($receive_id);					
+						$last_qty = $cek_qty_on_hand - $qty;
+						if($last_qty < 0){
+							$rsd['qty_on_hand'] = 0;
+						}else{
+							$rsd['qty_on_hand'] = $last_qty;
+						}
+
+						$this->db->where('product_id', $receive_id);
+						$this->db->where('qty_on_hand >', 0);
+						$this->db->order_by("id", "asc");
+						$this->db->limit(1);
+						$query = $this->db->update('rsd' ,$rsd);
+
+						if($last_qty >= 0){
+							break;
+							// $i = 100;
+						}
+						$qty= $last_qty * (-1);
+					}
+					
+					$rsd['qty_on_hand'] = $qty_on_hand - $data['qty'];
+					$this->db->where('product_id', $data['product_id']);
+					$query = $this->db->update('inventory_on_hand' ,$rsd);
+					
+					$history['document_no'] = $this->qms_model->getDocumentNo('receive_slip',$receive_id);
+					$history['product_id'] = $this->qms_model->getProductID($data['product_id']);
+					$history['qty'] = $data['qty'];
+					$history['mode'] = "OUT";
+					//die(print_r($history));
+					$this->qms_model->submitTableData('history',$history);
+				}
+				else{ 
+					$data = array();
+					array_push($data, array(
+												'product' => 'Error: Qty is greater than on hand !'
+											));
+					echo json_encode($data);
+					die;
+				}
+			}elseif($tipe == 'PA'){
+				$arrPackage = $this->qms_model->getPackageDetail($receive_id);
+				// echo count($arrPackage);
+				// die;
+				$qtySimpan = $data['qty'];
+				$productSimpan = $receive_id;
+				//Cek start
+				foreach($arrPackage as $key => $value){
+					$packProduct_id = $arrPackage[$key]['product_id'];
+					$packQty = $arrPackage[$key]['qty'];
+					$packMProductId = $this->qms_model->getMProductID($packProduct_id);
+					$packQtyonHand = $this->qms_model->getQtyOnHand2($packMProductId);
+					$receive_id = $packMProductId;
+					$data['product_id'] = $packMProductId;
+					$data['qty'] = ($qtySimpan * $packQty);
+
+					$rsd['qty_on_hand'] = $packQtyonHand - $data['qty'];
+					$qty = $data['qty'];
+					// die(echo $rsd['qty_on_hand']);
+					if($rsd['qty_on_hand'] < 0){						
+						$data = array();
+						array_push($data, array(
+													'product' => 'Error: Qty '.$this->qms_model->getProductName($packMProductId).'('.$packMProductId.') is greater than on hand! Please select other package!'
+												));
+						echo json_encode($data);
+						die;
+					}
+				}
+				//cek akhir
+				foreach($arrPackage as $key => $value){
+					$packProduct_id = $arrPackage[$key]['product_id'];
+					$packQty = $arrPackage[$key]['qty'];
+					$packMProductId = $this->qms_model->getMProductID($packProduct_id);
+					$packQtyonHand = $this->qms_model->getQtyOnHand2($packMProductId);
+					$receive_id = $packMProductId;
+					$data['product_id'] = $packMProductId;
+					$data['qty'] = ($qtySimpan * $packQty);
+
+					$rsd['qty_on_hand'] = $packQtyonHand - $data['qty'];
+					$qty = $data['qty'];
+					// die(echo $rsd['qty_on_hand']);
+					for($i=0;$i<100;$i++){
+						//Update looping disini
+						$cek_qty_on_hand = $this->qms_model->cekQtyOnHand($receive_id);					
+						$last_qty = $cek_qty_on_hand - $qty;
+						if($last_qty < 0){
+							$rsd['qty_on_hand'] = 0;
+						}else{
+							$rsd['qty_on_hand'] = $last_qty;
+						}
+
+						$this->db->where('product_id', $receive_id);
+						$this->db->where('qty_on_hand >', 0);
+						$this->db->order_by("id", "asc");
+						$this->db->limit(1);
+						$query = $this->db->update('rsd' ,$rsd);
+
+						$rsd['qty_on_hand'] = $packQtyonHand - $data['qty'];
+						$this->db->where('product_id', $data['product_id']);
+						$query = $this->db->update('inventory_on_hand' ,$rsd);
+						
+						if($last_qty >= 0){
+							break;
+							// $i = 100;
+						}
+						$qty= $last_qty * (-1);
+					}
+
+				}
+
+				$data['qty'] = $qtySimpan;
+				$data['product_id'] = $productSimpan;
 				$this->qms_model->submitTableData('order_detail',$data);
-			
-				$this->db->where('id', $receive_id);
-				$query = $this->db->update('rsd' ,$rsd);
-				
-				$this->db->where('product_id', $data['product_id']);
-				$query = $this->db->update('inventory_on_hand' ,$rsd);
-				
+
 				$history['document_no'] = $this->qms_model->getDocumentNo('receive_slip',$receive_id);
 				$history['product_id'] = $this->qms_model->getProductID($data['product_id']);
 				$history['qty'] = $data['qty'];
 				$history['mode'] = "OUT";
 				//die(print_r($history));
 				$this->qms_model->submitTableData('history',$history);
+				
 			}
-			else die('Qty is greater than on hand !');
 			
 			/* if ($data['id'] == '' || $data['id'] == null){
 			//mode insert;
@@ -235,14 +366,26 @@ class Transaction extends MX_Controller {
 		$arr = $this->qms_model->getTransactionDetail($id_header);
 		
 		foreach($arr as $key => $value){
-			$arr[$key]['product'] = $this->qms_model->getProductName($arr[$key]['product_id']);
+			if($arr[$key]['tipe'] == 'NP'){
+				$arr[$key]['product'] = $this->qms_model->getProductName($arr[$key]['product_id']);
+				$arr[$key]['package'] = 'Non Package';
+			}elseif($arr[$key]['tipe'] == 'PA'){
+				$arr[$key]['product'] = $this->qms_model->getPackageName($arr[$key]['product_id']);
+				$arr[$key]['package'] = 'Package';
+			}
 		}
 		
         return $arr;
     }
 	
 	public function checkout() {
-		die('Print Out Preview');
+		$header['mode'] = 'checkout';
+		$data['mode'] = 'checkout 2';
+		//die(print_r($data));
+        // $this->load->view('commons/header', $header);
+        $this->load->view('checkout',$data);
+        // $this->load->view('commons/footer');
+		// die('Print Out Preview');
     }
 	
 	// public function getTestData() {

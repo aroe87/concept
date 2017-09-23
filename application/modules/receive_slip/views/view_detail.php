@@ -55,9 +55,9 @@
     var $table = $('#table');
     var $add = $('#add');
     $table.on('dbl-click-row.bs.table', function (row, $element) {
-	window.open("<?php echo base_url(); ?>receive_slip/view_detail/id/"+$element.id,'_parent');
+	window.open("<?php echo base_url(); ?>receive_slip/form/mode/update/id/"+$element.id,'_parent');
     });
     $add.on('click',function(){
-	window.open("<?php echo base_url(); ?>receive_slip/form/mode/add/id/<?php echo $id; ?>",'_parent');
+  window.open("<?php echo base_url(); ?>receive_slip/form/mode/add/id/<?php echo $id; ?>",'_parent');
     });
 </script>

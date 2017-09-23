@@ -39,20 +39,27 @@ class Receive_slip extends MX_Controller {
 				//mode update
 				if ($this->uri->segment(5) !== FALSE){
 					
-					if ($this->uri->segment(7) !== FALSE){
+					if ($this->uri->segment(6) !== FALSE){
 						//update detail
-						
-						$id = $this->uri->segment(8);
-						$arr = $this->qms_model->getReceiveSlipDetail($id);
-						$form = 'form_detail';
-					}
-					else{
-						//update header
 						
 						$id = $this->uri->segment(6);
 						$arr = $this->qms_model->getReceiveSlipDetail($id);
-						$form = 'form_header';
+						$form = 'form_detail';
+						$prod = $this->qms_model->getAllProduct();					
+					
+						foreach($prod as $key => $value){
+							$product[$key]['id'] = $prod[$key]['product_id'];
+							$product[$key]['text'] = $prod[$key]['description'];
+						}
+						$data['all_product'] = json_encode($product);
 					}
+					// else{
+					// 	//update header
+						
+					// 	$id = $this->uri->segment(6);
+					// 	$arr = $this->qms_model->getReceiveSlipDetail($id);
+					// 	$form = 'form_header';
+					// }
 				}
 			}
 			elseif ($mode == "add") {
@@ -140,7 +147,7 @@ class Receive_slip extends MX_Controller {
 		
 			$id = $this->uri->segment(4);
 			
-			$arr = $this->qms_model->getReceiveSlipDetail($id);
+			$arr = $this->qms_model->getReceiveSlipDetail2($id);
 			
 			foreach ($arr as $key => $field) {
 				$arr[$key]['product_id'] = $this->qms_model->getProductName($arr[$key]['product_id']);
@@ -159,8 +166,7 @@ class Receive_slip extends MX_Controller {
 		
 		if ($this->uri->segment(3) !== FALSE) $mode = $this->uri->segment(4);
 				
-		
-		
+		$noError = false;
 		if($mode == "header"){
 			//save header
 			
@@ -193,7 +199,12 @@ class Receive_slip extends MX_Controller {
 			
 			if ($data['id'] == '' || $data['id'] == null){
 				//mode insert;
-				
+
+				// $this->db->trans_start();
+				$cek_product_by_id = $this->qms_model->cekProductById($data['id_header'], $data['product_id']);
+				if($cek_product_by_id > 0){
+					die('This product already exists!');
+				}
 				//die(print_r($data));
 				$data['qty_on_hand'] = $data['qty'];
 				$this->qms_model->submitTableData('rsd',$data);
@@ -210,8 +221,10 @@ class Receive_slip extends MX_Controller {
 				$history['mode'] = "IN";
 				//die(print_r($history));
 				$this->qms_model->submitTableData('history',$history);
-				
-				$res = "Insert Success";
+
+				// $noError = $this->db->trans_complete();
+				/*if($noError) */$res = "Insert Success";
+				// else $res = 'Update Error'
 			}
 			else{
 				//mode update;
@@ -242,6 +255,18 @@ class Receive_slip extends MX_Controller {
 		
 		return "RS"."/".Date('m')."/".str_pad($code_max, 4, '0', STR_PAD_LEFT);
 	}
+
+	public function get_Price(){
+		foreach($_POST as $key => $value){
+			$data[$key] = $this->input->post($key);
+		}
+
+		$price = $this->qms_model->getAllPrice($data['prod_selected']);
+
+		echo json_encode($price);
+		// return json_encode($price);
+	}
+
 }
 
 /* End of file welcome.php */

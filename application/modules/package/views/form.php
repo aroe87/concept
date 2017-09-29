@@ -12,17 +12,9 @@
                     <dd>
                         <input id='package' name='package' class='form-control' type='text' placeholder='The Name of the Package' value="<?php if ($mode == 'update') echo $result['package']; ?>">
                     </dd>
-					<dt>Discount Percentage</dt>
-                    <dd>
-                        <div class="input-group">
-							<input id='discount' name='discount' class='form-control' style="width:200px" type='text' placeholder='If no discount, leave blank' value="<?php if ($mode == 'update') echo $result['discount']; ?>">
-							<span class="input-group-addon" style="width:0">%</span>
-						</div>
-					
-                    </dd>
                 </dl>
+            </form>
         </div>
-</form>
     </div>
 	<div id="toolbar">
         <button id="add" class="btn btn-success">
@@ -58,6 +50,12 @@
 	<div class="modal"><!-- Place at bottom of page --></div>
 </section>
 <script>
+  $(window).bind("load", function() {
+    <?php if ($mode != 'update'){ ?>
+      $('#toolbar').hide();
+    <?php } ?>
+  });
+  
 	var $table = $('#table');
 	var $add = $('#add');
     $table.on('dbl-click-row.bs.table', function (row, $element) {
@@ -79,8 +77,12 @@
 			processData: false,
 			url: "<?php echo base_url();?>package/saveData",
 				success: function(response) {
-					alert(response);
-					window.open("<?php echo base_url(); ?>package",'_parent');
+          if (response.match(/.* Empty.*/)) {
+            alert(response);
+          }else{
+  					alert(response);
+  					window.open("<?php echo base_url(); ?>package",'_parent');
+          }
 				},
 				error: function(response){
 					alert(response);
@@ -89,5 +91,25 @@
 		return false;
 	});
 	
+  $(document).on('click', '.remove', function (e){
+    //if(field=='action'){
+    var id = $(this).parent().siblings(":first").text();
+    // alert(id);
+    $.ajax({
+      type: "POST",
+      url: "<?php echo base_url();?>package/remove_detail/id/"+id,
+      success: function(s){
+        alert(s);
+        if (s.match(/.*Success/)) {
+          location.reload();
+        }
+        
+      }
+      ,
+      error: function(e){
+        alert('Delete Error');
+      }
+    });
+  });
 	
 </script>

@@ -187,10 +187,21 @@ class Qms_model extends CI_Model {
         return $res;
     }
     
-	function getPackageDetail($id) {
-        $query = $this->DB->query("SELECT * from mpd where id_header = '$id'");
+    function getDiscount($id) {
+        $query = $this->DB->query("SELECT floor(discount*100) as result from m_package where id = '$id'");
         if ($query->num_rows() > 0) {
-            $res = $query->row_array();
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
+
+        return $res;
+    }
+    
+	function getPackageDetail($id) {
+        $query = $this->DB->query("SELECT * from mpd where id_header = $id");
+        if ($query->num_rows() > 0) {
+            $res = $query->result_array();
         }
         else
             $res = array();
@@ -266,6 +277,17 @@ class Qms_model extends CI_Model {
 	
     function getProductName($product_id) {
         $query = $this->DB->query("SELECT description as result from m_product where product_id = $product_id");
+        if ($query->num_rows() > 0) {
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
+
+        return $res;
+    }
+    
+    function getMProductID($id) {
+        $query = $this->DB->query("SELECT product_id as result from m_product where id = $id");
         if ($query->num_rows() > 0) {
             $res = $query->row()->result;
         }
@@ -397,9 +419,9 @@ class Qms_model extends CI_Model {
     
 	function getInventoryProduct3() {
         //$query = $this->DB->query("SELECT CONCAT('PR',a.id) AS id, b.`description`, qty_on_hand FROM rsd a, m_product b WHERE qty_on_hand > 0 AND a.`product_id` = b.`product_id` UNION SELECT CONCAT('PA',id) AS id, CONCAT('PACKAGE - ',package) AS description, 0 AS qty_on_hand FROM m_package");
-		$query = $this->DB->query("SELECT product_id, SUM(qty_on_hand) AS total, 'Non Package' AS tipe FROM rsd GROUP BY product_id
-                                    UNION
-                                    SELECT id AS product_id, 1 AS total, 'Package' AS tipe FROM m_package");
+		$query = $this->DB->query("SELECT CONCAT('NP',product_id) AS product_id, SUM(qty_on_hand) AS total, 'Non Package' AS tipe FROM rsd GROUP BY product_id
+                                   UNION
+                                   SELECT CONCAT('PA',id) AS product_id, 1 AS total, 'Package' AS tipe FROM m_package");
         if ($query->num_rows() > 0) {
             $res = $query->result_array();
         }
@@ -439,6 +461,32 @@ class Qms_model extends CI_Model {
         return $res;
     }
     
+    function getAllPrice2($receive_id) {
+        $tipe = substr($receive_id,0,2);
+        $receive_id = substr($receive_id,2);
+        if($tipe == 'NP'){
+            $query = $this->DB->query("SELECT selling_price, receive_price from rsd where product_id = '$receive_id' order by date_created DESC limit 0,1");
+            if ($query->num_rows() > 0) {
+                $res = $query->result_array();
+            }
+            else 
+                $res = array();
+
+        }elseif($tipe == 'PA'){
+            $query = $this->DB->query("SELECT SUM(a.qty * receive_price) AS receive_price, SUM(a.qty * selling_price) * (1 - c.discount) AS selling_price
+                                        FROM mpd a, rsd b, m_package c
+                                        WHERE a.id_header = 5 AND a.product_id=b.id AND a.id_header=c.id");
+            if ($query->num_rows() > 0) {
+                $res = $query->result_array();
+            }
+            else 
+                $res = array();
+        }
+        
+
+        return $res;
+    }
+    
 	function getProductID($receive_id) {
         $query = $this->DB->query("SELECT product_id as result from rsd where id = '$receive_id'");
         if ($query->num_rows() > 0) {
@@ -450,8 +498,41 @@ class Qms_model extends CI_Model {
         return $res;
     }
 	
-	function getOrderID($order_no) {
+    function getOrderID($order_no) {
         $query = $this->DB->query("SELECT id as result from order_header where order_no = '$order_no'");
+        if ($query->num_rows() > 0) {
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
+
+        return $res;
+    }
+    
+    function getCash($order_no) {
+        $query = $this->DB->query("SELECT payment as result from order_header where order_no = '$order_no'");
+        if ($query->num_rows() > 0) {
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
+
+        return $res;
+    }
+    
+    function getReturn($order_no) {
+        $query = $this->DB->query("SELECT `return` as result from order_header where order_no = '$order_no'");
+        if ($query->num_rows() > 0) {
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
+
+        return $res;
+    }
+    
+	function getCustomer($order_no) {
+        $query = $this->DB->query("SELECT `customer_name` as result from order_header where order_no = '$order_no'");
         if ($query->num_rows() > 0) {
             $res = $query->row()->result;
         }
@@ -539,9 +620,33 @@ class Qms_model extends CI_Model {
         return $res;
     }
     
-	function cekProductPackageById($id_header, $product_id) {
-		
+    function cekProductPackageById($id_header, $product_id) {
+        
         $query = $this->DB->query("SELECT COUNT(*) as result FROM mpd WHERE id_header = '$id_header' AND product_id = '$product_id'");
+        if ($query->num_rows() > 0) {
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
+
+        return $res;
+    }
+    
+    function cekDetailPackage($id) {
+        
+        $query = $this->DB->query("SELECT COUNT(*) as result FROM mpd WHERE id_header = '$id'");
+        if ($query->num_rows() > 0) {
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
+
+        return $res;
+    }
+    
+	function cekOrderDetailPackage($id) {
+		
+        $query = $this->DB->query("SELECT COUNT(*) AS result FROM order_detail WHERE product_id IN (SELECT id_header FROM mpd WHERE product_id = $id)");
         if ($query->num_rows() > 0) {
             $res = $query->row()->result;
         }

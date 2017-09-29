@@ -52,6 +52,11 @@
 				<?php if ($mode == 'update') echo $result['package'];
 				else echo "<option></option>"; ?>
             </select>*/ ?>
+            <span style="display:inline-block;">Discount Percentage</span><br>
+            <div class="input-group">
+				<input id='discount' name='discount' class='form-control input-sm' style="display:inline-block" type='text' placeholder='If no discount, leave blank' value="<?php if ($mode == 'update') echo $result['discount']; ?>">
+				<span class="input-group-addon">%</span>
+			</div>
 		</div>
 		<div class="col-xs-4 col-sm-4 col-md-4">
 			<span style="display:inline-block;">Receive Date</span><br>
@@ -82,6 +87,7 @@
             <tr>
                 <th data-field="id">ID</th>
                 <th data-field="product_id">Product ID</th>
+                <th data-field="package">Package</th>
                 <th data-field="product">Description</th>
 				<th data-field="qty">Qty</th>
 				<th data-field="price">Price</th>
@@ -93,8 +99,8 @@
 		<div class='col-xs-4 col-sm-4 col-md-4'>
 			<img id="back" onclick="window.open('<?php echo base_url(); ?>billed_transaction','_parent');" src ="<?php echo base_url();?>assets/img/back.png" width="70" height="70" style="border: #fff solid 1px" >
 			<img id="add" onclick="showForm()" src ="<?php echo base_url();?>assets/img/add_detail.png" width="70" height="70" style="border: #fff solid 1px" >
-			<img id="clear" onclick="clearDetail()" src ="<?php echo base_url();?>assets/img/clear.png" width="70" height="70" style="border: #fff solid 1px" >
-			<img id="checkout" onclick="window.open('<?php echo base_url(); ?>transaction/checkout','_parent');" src ="<?php echo base_url();?>assets/img/checkout.png" width="70" height="70" style="border: #fff solid 1px" >
+			<img id="clear" onclick="clearData()" src ="<?php echo base_url();?>assets/img/clear.png" width="70" height="70" style="border: #fff solid 1px" >
+			<img id="checkout" onclick="checkout()" src ="<?php echo base_url();?>assets/img/checkout.png" width="70" height="70" style="border: #fff solid 1px" >
 		</div>
 		<div class='col-xs-4 col-sm-4 col-md-4'>
 		</div>
@@ -263,6 +269,25 @@
 		else return true;
 	}
 	
+	function checkout(){
+		var form_header = $(".form_header")[0];
+		var formData = new FormData(form_header);
+		$.ajax({
+			type: "POST",
+			data: formData,
+			contentType: false,
+			processData: false,
+			url: "<?php echo base_url();?>transaction/checkout/order_no/<?php echo $result['order_no']; ?>",
+			success: function(response) {
+				window.open('<?php echo base_url(); ?>transaction/print_out/order_no/<?php echo $result['order_no']; ?>','_blank');
+				window.open('<?php echo base_url(); ?>billed_transaction','_parent');
+			},
+			error: function(response){
+				alert('save header error');
+			}
+		});
+	}
+
 	function getTotal(){
 		var order_no = $('#order_no').val();
 		$.ajax({
@@ -306,10 +331,14 @@
 							processData: false,
 							url: "<?php echo base_url();?>transaction/saveDetail/order_no/"+order_no,
 								success: function(response) {
-									hideForm();
-									getTotal();
 									var data = JSON.parse(response);
-									$('#table').bootstrapTable('load', data);
+									if ((data[0].product).match(/Error: .*/)) {
+										alert(data[0].product);
+									}else{
+										hideForm();
+										getTotal();
+										$('#table').bootstrapTable('load', data);
+									}
 								},
 								error: function(response){
 									alert('save detail error');

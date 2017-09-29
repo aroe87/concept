@@ -124,7 +124,6 @@ class Package extends MX_Controller {
 		if ($data['id'] == '' || $data['id'] == null){
 			//mode insert;
 			
-			$data['discount'] = ($data['discount']/100); //percentage
 			$data['created_by'] = USER_ID;
 			$data['date_created'] = Date('Y-m-d');
 			
@@ -133,10 +132,6 @@ class Package extends MX_Controller {
 		}
 		else{
 			//mode update;
-			$data['discount'] = ($data['discount']/100); //percentage
-			
-			// echo $data['discount'];
-			// die;
 			$this->db->where('id', $data['id']);
 			$query = $this->db->update('m_package' ,$data);
 			if($query) $res = 'Update Success';
@@ -197,8 +192,31 @@ class Package extends MX_Controller {
 	public function remove(){
 		if ($this->uri->segment(3) !== FALSE){
 			$id = $this->uri->segment(4);
+			$detail = $this->qms_model->cekDetailPackage($id);
+			if($detail > 0){
+				die('Delete error! Package already have '.$detail.' detail');
+			}
+
 			$this->db->where('id', $id);
-			$query = $this->db->delete('m_package' ,$id);
+			$query = $this->db->delete('m_package');
+			if($query) $res = 'Delete Success';
+			else $res = 'Delete Error';
+		}
+		else die('no parameter found !');
+		
+		die($res);
+	}
+
+	public function remove_detail(){
+		if ($this->uri->segment(3) !== FALSE){
+			$id = $this->uri->segment(4);
+			$detail = $this->qms_model->cekOrderDetailPackage($id);
+			if($detail > 0){
+				die('Delete error! Detail Package already have '.$detail.' detail');
+			}
+
+			$this->db->where('id', $id);
+			$query = $this->db->delete('mpd');
 			if($query) $res = 'Delete Success';
 			else $res = 'Delete Error';
 		}

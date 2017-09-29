@@ -29,7 +29,6 @@
             <tr>
                 <th data-field="id">ID</th>
                 <th data-field="package">Package</th>
-				<th data-field="discount">Discount</th>
                 <th data-field="created_by">Created By</th>
 				<th data-field="action">Action</th>
             </tr>
@@ -50,12 +49,16 @@
 	$(document).on('click', '.remove', function (e){
 		//if(field=='action'){
 		var id = $(this).parent().siblings(":first").text();
+    // alert(id);
 		$.ajax({
 			type: "POST",
 			url: "<?php echo base_url();?>package/remove/id/"+id,
 			success: function(s){
-				alert("Delete Success")
-				location.reload();
+				alert(s);
+        if (s.match(/.*Success/)) {
+          location.reload();
+        }
+				
 			}
 			,
 			error: function(e){

@@ -50,7 +50,6 @@
 			$Subtotal = 0;
 			for($i=0;$i<count($product);$i++){ 
 				$Subtotal = $Subtotal + $product[$i]['subtotal'];
-				if(trim($product[$i]['tipe']) == 'NP'){
 				?>
 					<tr>
 						<td style="text-align:left"><?php echo trim($product[$i]['product']); ?></td>
@@ -58,44 +57,24 @@
 						<td style="text-align:right"><?php echo number_format($product[$i]['price'],0,",","."); ?></td>
 						<td style="text-align:right"><?php echo number_format($product[$i]['subtotal'],0,",","."); ?></td>
 					</tr>
-			 <?php }else{
-			 		?>
-			 		<tr>
-						<td style="text-align:left"><?php echo trim($product[$i]['product']); ?></td>
-						<td style="text-align:center"><?php echo $product[$i]['qty']; ?></td>
-						<td style="text-align:right"></td>
-						<td style="text-align:right"></td>
-					</tr>
-			 		<?php
-			 			$arr = $this->qms_model->getPackageDetail($product[$i]['product_id']);
-						$Discount = $this->qms_model->getDiscount($product[$i]['product_id']);
-						foreach($arr as $key => $value){
-							$arr[$key]['product'] = $this->qms_model->getProductName2($arr[$key]['product_id']);
-							$Price = $this->qms_model->getProductPrice($arr[$key]['product_id']);
-							$Qty = ($product[$i]['qty'] * $arr[$key]['qty']);
-							?>
-						<tr>
-							<td style="text-align:left"><?php echo trim($arr[$key]['product']); ?></td>
-							<td style="text-align:center"><?php echo $Qty; ?></td>
-							<td style="text-align:right"><?php echo number_format($Price,0,",","."); ?></td>
-							<td style="text-align:right"><?php echo number_format($Qty * $Price,0,",","."); ?></td>
-						</tr>
-							<?php
-						}
-						?>
-					<tr>
-						<td colspan="3" style="text-align:right">Package Discount (<?php echo $Discount.'%) : '; ?></td>
-						<td style="text-align:right"><?php echo number_format($product[$i]['subtotal'],0,",","."); ?></td>
-					</tr>
-						<?php
-			 		}
-			 	} ?>
+			 <?php } ?>
+		 	<tr>
+				<td colspan="4">--------------------------------------------------</td>
+			</tr>
+		 	<tr>
+				<td colspan="3" style="text-align:right">SUBTOTAL : </td>
+				<td style="text-align:right"><?php echo number_format($Subtotal,0,",","."); ?></td>
+			</tr>
+		 	<tr>
+				<td colspan="3" style="text-align:right">DISCOUNT (<?php echo $discount_header . '%) : '; ?></td>
+				<td style="text-align:right"><?php echo number_format($Subtotal*($discount_header/100),0,",","."); ?></td>
+			</tr>
 		 	<tr>
 				<td colspan="4">--------------------------------------------------</td>
 			</tr>
 		 	<tr>
 				<td colspan="3" style="text-align:right">TOTAL : </td>
-				<td style="text-align:right"><?php echo number_format($Subtotal,0,",","."); ?></td>
+				<td style="text-align:right"><?php echo number_format($Subtotal-($Subtotal*($discount_header/100)),0,",","."); ?></td>
 			</tr>
 		 	<tr>
 				<td colspan="3" style="text-align:right">CASH : </td>
@@ -117,6 +96,6 @@
     <ol class="breadcrumb">
 </section>
 <script>
-  window.print();
+  // window.print();
   // window.close();
 </script>

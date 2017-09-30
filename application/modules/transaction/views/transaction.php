@@ -106,6 +106,22 @@
 		</div>
 		<div id="payment_details" class='col-xs-4 col-sm-4 col-md-4'>
 			<dl class='dl-horizontal'>
+                <dt>Subtotal</dt>
+                <dd>
+					<div class="input-group">
+						<span class="input-group-addon">Rp.</span>
+						<input id='subtotal2' class='form-control input-sm' type='text' value="<?php if($mode=="update") echo $result['subtotal2']; ?>" readonly>
+					</div>
+                </dd>
+                <dt>Discount</dt>
+                <dd>
+					<div class="input-group">
+						<span class="input-group-addon">Rp.</span>
+						<input id='discount2' class='form-control input-sm' type='text' value="<?php if($mode=="update") echo $result['discount2']; ?>" readonly>
+					</div>
+                </dd>
+                <dt></dt>
+                <dd>*****************************************************</dd>
                 <dt>Total</dt>
                 <dd>
 					<div class="input-group">
@@ -281,8 +297,12 @@
 			processData: false,
 			url: "<?php echo base_url();?>transaction/checkout/order_no/<?php echo $result['order_no']; ?>",
 			success: function(response) {
-				window.open('<?php echo base_url(); ?>transaction/print_out/order_no/<?php echo $result['order_no']; ?>','_blank');
-				// window.open('<?php //echo base_url(); ?>billed_transaction','_parent');
+				if (response.match(/Error: .*/)) {
+					alert(response);
+				}else{
+					window.open('<?php echo base_url(); ?>transaction/print_out/order_no/<?php echo $result['order_no']; ?>','_blank');
+					// window.open('<?php //echo base_url(); ?>billed_transaction','_parent');
+				}
 			},
 			error: function(response){
 				alert('save header error');

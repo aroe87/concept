@@ -35,7 +35,9 @@ class Transaction extends MX_Controller {
 			$mode = "update";
 			$data['id'] = $this->uri->segment(4);
 			$data['result'] = $this->qms_model->getTransaction($data['id']);
-			$data['result']['total'] = $this->qms_model->getTotal($data['result']['order_no']);
+			$data['result']['subtotal2'] = $this->qms_model->getTotal($data['result']['order_no']);
+			$data['result']['discount2'] = ($this->qms_model->getDiscountHeader($data['result']['order_no'])/100)*$data['result']['subtotal2'];
+			$data['result']['total'] = $data['result']['subtotal2'] - $data['result']['discount2'];
 		}
 		else{
 			//mode insert
@@ -165,57 +167,65 @@ class Transaction extends MX_Controller {
 
 			$data['tipe'] = $tipe;
 			$data['product_id'] = $receive_id;
+				// echo $tipe;
+
 			$this->db->trans_start();
 			if($tipe == 'NP'){
-				$qty_on_hand = $this->qms_model->getQtyOnHand2($receive_id);
-				$rsd['qty_on_hand'] = $qty_on_hand - $data['qty'];
+				$cek_kategori = $this->qms_model->getCategoryID($this->qms_model->getTypeID($receive_id));
+				// echo 'kategori ' . $cek_kategori;
 				$qty = $data['qty'];
-				// die(echo $receive_id);
-				if($rsd['qty_on_hand'] >= 0){
-					// $data['product_id'] = $this->qms_model->getProductID($data['product_id']);
+				if($cek_kategori == 3){ //SERVICE
 					$this->qms_model->submitTableData('order_detail',$data);
-					
-					for($i=0;$i<100;$i++){
-						//Update looping disini
-						$cek_qty_on_hand = $this->qms_model->cekQtyOnHand($receive_id);					
-						$last_qty = $cek_qty_on_hand - $qty;
-						if($last_qty < 0){
-							$rsd['qty_on_hand'] = 0;
-						}else{
-							$rsd['qty_on_hand'] = $last_qty;
-						}
-
-						$this->db->where('product_id', $receive_id);
-						$this->db->where('qty_on_hand >', 0);
-						$this->db->order_by("id", "asc");
-						$this->db->limit(1);
-						$query = $this->db->update('rsd' ,$rsd);
-
-						if($last_qty >= 0){
-							break;
-							// $i = 100;
-						}
-						$qty= $last_qty * (-1);
-					}
-					
+				}else{
+					$qty_on_hand = $this->qms_model->getQtyOnHand2($receive_id);
 					$rsd['qty_on_hand'] = $qty_on_hand - $data['qty'];
-					$this->db->where('product_id', $data['product_id']);
-					$query = $this->db->update('inventory_on_hand' ,$rsd);
-					
-					$history['document_no'] = $this->qms_model->getDocumentNo('receive_slip',$receive_id);
-					$history['product_id'] = $this->qms_model->getProductID($data['product_id']);
-					$history['qty'] = $data['qty'];
-					$history['mode'] = "OUT";
-					//die(print_r($history));
-					$this->qms_model->submitTableData('history',$history);
-				}
-				else{ 
-					$data = array();
-					array_push($data, array(
-												'product' => 'Error: Qty is greater than on hand !'
-											));
-					echo json_encode($data);
-					die;
+					// die(echo $receive_id);
+					if($rsd['qty_on_hand'] >= 0){
+						// $data['product_id'] = $this->qms_model->getProductID($data['product_id']);
+						$this->qms_model->submitTableData('order_detail',$data);
+						
+						for($i=0;$i<100;$i++){
+							//Update looping disini
+							$cek_qty_on_hand = $this->qms_model->cekQtyOnHand($receive_id);					
+							$last_qty = $cek_qty_on_hand - $qty;
+							if($last_qty < 0){
+								$rsd['qty_on_hand'] = 0;
+							}else{
+								$rsd['qty_on_hand'] = $last_qty;
+							}
+
+							$this->db->where('product_id', $receive_id);
+							$this->db->where('qty_on_hand >', 0);
+							$this->db->order_by("id", "asc");
+							$this->db->limit(1);
+							$query = $this->db->update('rsd' ,$rsd);
+
+							if($last_qty >= 0){
+								break;
+								// $i = 100;
+							}
+							$qty= $last_qty * (-1);
+						}
+						
+						$rsd['qty_on_hand'] = $qty_on_hand - $data['qty'];
+						$this->db->where('product_id', $data['product_id']);
+						$query = $this->db->update('inventory_on_hand' ,$rsd);
+						
+						$history['document_no'] = $this->qms_model->getDocumentNo('receive_slip',$receive_id);
+						$history['product_id'] = $this->qms_model->getProductID($data['product_id']);
+						$history['qty'] = $data['qty'];
+						$history['mode'] = "OUT";
+						//die(print_r($history));
+						$this->qms_model->submitTableData('history',$history);
+					}
+					else{ 
+						$data = array();
+						array_push($data, array(
+													'product' => 'Error: Qty is greater than on hand !'
+												));
+						echo json_encode($data);
+						die;
+					}
 				}
 			}elseif($tipe == 'PA'){
 				$arrPackage = $this->qms_model->getPackageDetail($receive_id);
@@ -256,44 +266,45 @@ class Transaction extends MX_Controller {
 					$data['qty'] = ($qtySimpan * $packQty);
 
 					$rsd['qty_on_hand'] = $packQtyonHand - $data['qty'];
+					$cek_kategori = $this->qms_model->getCategoryID($this->qms_model->getTypeID($receive_id));
 					$qty = $data['qty'];
-
-					if($rsd['qty_on_hand'] < 0){						
-						$data = array();
-						array_push($data, array(
-													'product' => 'Error: Qty '.$this->qms_model->getProductName($packMProductId).'('.$packMProductId.') is greater than on hand! Please select other package!'
-												));
-						echo json_encode($data);
-						die;
-					}
-					// die(echo $rsd['qty_on_hand']);
-					for($i=0;$i<100;$i++){
-						//Update looping disini
-						$cek_qty_on_hand = $this->qms_model->cekQtyOnHand($receive_id);					
-						$last_qty = $cek_qty_on_hand - $qty;
-						if($last_qty < 0){
-							$rsd['qty_on_hand'] = 0;
-						}else{
-							$rsd['qty_on_hand'] = $last_qty;
+					if($cek_kategori != 3){ //SERVICE
+						if($rsd['qty_on_hand'] < 0){						
+							$data = array();
+							array_push($data, array(
+														'product' => 'Error: Qty '.$this->qms_model->getProductName($packMProductId).'('.$packMProductId.') is greater than on hand! Please select other package!'
+													));
+							echo json_encode($data);
+							die;
 						}
+						// die(echo $rsd['qty_on_hand']);
+						for($i=0;$i<100;$i++){
+							//Update looping disini
+							$cek_qty_on_hand = $this->qms_model->cekQtyOnHand($receive_id);					
+							$last_qty = $cek_qty_on_hand - $qty;
+							if($last_qty < 0){
+								$rsd['qty_on_hand'] = 0;
+							}else{
+								$rsd['qty_on_hand'] = $last_qty;
+							}
 
-						$this->db->where('product_id', $receive_id);
-						$this->db->where('qty_on_hand >', 0);
-						$this->db->order_by("id", "asc");
-						$this->db->limit(1);
-						$query = $this->db->update('rsd' ,$rsd);
+							$this->db->where('product_id', $receive_id);
+							$this->db->where('qty_on_hand >', 0);
+							$this->db->order_by("id", "asc");
+							$this->db->limit(1);
+							$query = $this->db->update('rsd' ,$rsd);
 
-						$rsd['qty_on_hand'] = $packQtyonHand - $data['qty'];
-						$this->db->where('product_id', $data['product_id']);
-						$query = $this->db->update('inventory_on_hand' ,$rsd);
-						
-						if($last_qty >= 0){
-							break;
-							// $i = 100;
+							$rsd['qty_on_hand'] = $packQtyonHand - $data['qty'];
+							$this->db->where('product_id', $data['product_id']);
+							$query = $this->db->update('inventory_on_hand' ,$rsd);
+							
+							if($last_qty >= 0){
+								break;
+								// $i = 100;
+							}
+							$qty= $last_qty * (-1);
 						}
-						$qty= $last_qty * (-1);
 					}
-
 				}
 
 				$data['qty'] = $qtySimpan;
@@ -321,6 +332,7 @@ class Transaction extends MX_Controller {
 		}
 		
 		$header['subtotal'] = $this->qms_model->getTotal($order_no);
+		$header['total'] = $header['subtotal'] - ($header['subtotal']*($header['discount']/100));
 		$this->db->where('id', $data['id_header']);
 		$query = $this->db->update('order_header' ,$header);
 		// $this->db->trans_complete();
@@ -365,8 +377,14 @@ class Transaction extends MX_Controller {
 			$data[$key] = $this->input->post($key);
 		}
 
+		if($data['return'] < 0){
+			$res = 'Error: Cash less then Total!';
+			die($res);
+		}
+		// PRINT_R($data);
 		// $data['status'] = 'CLOSED';
 		// $data['flag_print'] = 'Y';
+		$data['subtotal'] = $this->qms_model->getTotal($data['order_no']);
 		$data['discount'] = ($data['discount']/100); //percentage
 
 		$this->db->where('id', $data['id']);
@@ -406,6 +424,7 @@ class Transaction extends MX_Controller {
 		}
 		// $data = array();
 		$data['order_no']  = $order_no;
+		$data['discount_header']  = $this->qms_model->getDiscountHeader($order_no);
 		$data['cash']  = $this->qms_model->getCash($order_no);
 		$data['return']  = $this->qms_model->getReturn($order_no);
 		$data['customer']  = $this->qms_model->getCustomer($order_no);

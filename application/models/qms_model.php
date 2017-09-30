@@ -65,6 +65,17 @@ class Qms_model extends CI_Model {
         return $res;
     }
 	
+    function getTypeID($product_id) {
+        $query = $this->DB->query("SELECT id_type as result from m_product where id = '$product_id' or product_id='$product_id'");
+        if ($query->num_rows() > 0) {
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
+
+        return $res;
+    }
+    
 	function getTypeName($id_type) {
         $query = $this->DB->query("SELECT type as result from m_type where id = $id_type");
         if ($query->num_rows() > 0) {
@@ -87,13 +98,24 @@ class Qms_model extends CI_Model {
         return $res;
     }
 	
-	function getCategory($id) {
+    function getCategory($id) {
         $query = $this->DB->query("SELECT * from m_kategori where id = $id");
         if ($query->num_rows() > 0) {
             $res = $query->row_array();
         }
         else
             $res = array();
+
+        return $res;
+    }
+    
+	function getCategoryID($id) {
+        $query = $this->DB->query("SELECT id_category as result from m_type where id = $id");
+        if ($query->num_rows() > 0) {
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
 
         return $res;
     }
@@ -189,6 +211,17 @@ class Qms_model extends CI_Model {
     
     function getDiscount($id) {
         $query = $this->DB->query("SELECT floor(discount*100) as result from m_package where id = '$id'");
+        if ($query->num_rows() > 0) {
+            $res = $query->row()->result;
+        }
+        else
+            $res = '';
+
+        return $res;
+    }
+    
+    function getDiscountHeader($order_no) {
+        $query = $this->DB->query("SELECT floor(discount*100) as result from order_header where order_no = '$order_no'");
         if ($query->num_rows() > 0) {
             $res = $query->row()->result;
         }
@@ -473,9 +506,9 @@ class Qms_model extends CI_Model {
                 $res = array();
 
         }elseif($tipe == 'PA'){
-            $query = $this->DB->query("SELECT SUM(a.qty * receive_price) AS receive_price, SUM(a.qty * selling_price) * (1 - c.discount) AS selling_price
+            $query = $this->DB->query("SELECT SUM(a.qty * receive_price) AS receive_price, SUM(a.qty * selling_price) AS selling_price
                                         FROM mpd a, rsd b, m_package c
-                                        WHERE a.id_header = 5 AND a.product_id=b.id AND a.id_header=c.id");
+                                        WHERE a.id_header = '$receive_id' AND a.product_id=b.id AND a.id_header=c.id");
             if ($query->num_rows() > 0) {
                 $res = $query->result_array();
             }

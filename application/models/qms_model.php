@@ -438,7 +438,6 @@ class Qms_model extends CI_Model {
     }
     
     function getInventoryProduct() {
-        //$query = $this->DB->query("SELECT CONCAT('PR',a.id) AS id, b.`description`, qty_on_hand FROM rsd a, m_product b WHERE qty_on_hand > 0 AND a.`product_id` = b.`product_id` UNION SELECT CONCAT('PA',id) AS id, CONCAT('PACKAGE - ',package) AS description, 0 AS qty_on_hand FROM m_package");
         $query = $this->DB->query("SELECT id, product_id, qty_on_hand as total FROM rsd");
         if ($query->num_rows() > 0) {
             $res = $query->result_array();

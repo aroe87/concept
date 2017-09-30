@@ -429,11 +429,7 @@ class Transaction extends MX_Controller {
 		$data['return']  = $this->qms_model->getReturn($order_no);
 		$data['customer']  = $this->qms_model->getCustomer($order_no);
 		$data['product']  = $arr;
-		// die(print_r($data));
-	    // $data = array(
-	    // 	'title' => 'PDF Created',
-	    // 	'message' => 'Hello World!'
-	    // );
+
 	    $this->load->view('checkout',$data);
 	    // $this->html2pdf->html($this->load->view('checkout',$data, true));
 	    
@@ -442,16 +438,6 @@ class Transaction extends MX_Controller {
 	    // 	echo 'PDF saved';
 	    // }
     }
-	
-	// public function getTestData() {
-		// $arr = $this->qms_model->getTransactionDetail(1);
-		
-		// foreach($arr as $key => $value){
-			// $arr[$key]['product'] = $this->qms_model->getProductName($arr[$key]['product_id']);
-		// }
-		
-        // echo json_encode($arr);
-    // }
 	
 	public function getDataByOrderNo() {
 		if ($this->uri->segment(3) !== FALSE){

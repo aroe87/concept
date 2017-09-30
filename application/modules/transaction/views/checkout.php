@@ -14,7 +14,7 @@
     </style>
 <section class="content-header" style="margin-left:10px;">
 	<div id="checkout_header" class="row">
-		<img src="<?php echo base_url();?>assets/img/header_concept2.jpg" width="350" height="auto"/>
+		<img src="<?php echo base_url();?>assets/img/header_concept2.jpg" width="325" height="auto"/>
 	</div>
     <ol class="breadcrumb">
 </section>
@@ -91,7 +91,7 @@
 </section>
 <section class="content-footer" style="margin-left:10px;">
 	<div id="checkout_footer" class="row">
-		<img src="<?php echo base_url();?>assets/img/footer_concept2.jpg" width="238" height="auto" style="margin:0 0 0 50px"/>
+		<img src="<?php echo base_url();?>assets/img/footer_concept2.jpg" width="210" height="auto" style="margin:0 0 0 50px"/>
 	</div>
     <ol class="breadcrumb">
 </section>

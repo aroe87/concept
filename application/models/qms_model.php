@@ -426,6 +426,17 @@ class Qms_model extends CI_Model {
         return $res;
     }
 	
+    function getTransactionDetailByOrderNo2($order_no) {
+        
+        $query = $this->DB->query("SELECT b.tipe,b.`product_id`,SUM(b.qty) AS qty, b.price,SUM(b.subtotal) AS subtotal
+                                    FROM order_header a, order_detail b 
+                                    WHERE a.id = b.id_header AND a.order_no = '$order_no'
+                                    GROUP BY b.tipe,b.`product_id`,b.price");
+        $res = $query->result_array();
+
+        return $res;
+    }
+    
     function getInventoryProduct() {
         //$query = $this->DB->query("SELECT CONCAT('PR',a.id) AS id, b.`description`, qty_on_hand FROM rsd a, m_product b WHERE qty_on_hand > 0 AND a.`product_id` = b.`product_id` UNION SELECT CONCAT('PA',id) AS id, CONCAT('PACKAGE - ',package) AS description, 0 AS qty_on_hand FROM m_package");
         $query = $this->DB->query("SELECT id, product_id, qty_on_hand as total FROM rsd");

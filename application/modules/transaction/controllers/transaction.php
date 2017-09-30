@@ -412,7 +412,7 @@ class Transaction extends MX_Controller {
 		if ($this->uri->segment(3) !== FALSE){
 			$order_no = $this->uri->segment(4);
 			
-			$arr = $this->qms_model->getTransactionDetailByOrderNo($order_no);
+			$arr = $this->qms_model->getTransactionDetailByOrderNo2($order_no);
 			foreach($arr as $key => $value){
 				if($arr[$key]['tipe'] == 'NP')
 					$arr[$key]['product'] = $this->qms_model->getProductName($arr[$key]['product_id']);

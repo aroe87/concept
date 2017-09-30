@@ -94,7 +94,7 @@
 				<th data-field="subtotal">Sub Total</th>
             </tr>
         </thead>
-    </table><br><br>
+    </table>
 	<div class='row'>
 		<div class='col-xs-4 col-sm-4 col-md-4'>
 			<img id="back" onclick="window.open('<?php echo base_url(); ?>billed_transaction','_parent');" src ="<?php echo base_url();?>assets/img/back.png" width="70" height="70" style="border: #fff solid 1px" >

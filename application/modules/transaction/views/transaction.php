@@ -54,8 +54,8 @@
             </select>*/ ?>
             <span style="display:inline-block;">Discount Percentage</span><br>
             <div class="input-group">
-				<input id='discount' name='discount' class='form-control input-sm' style="display:inline-block" type='text' placeholder='If no discount, leave blank' value="<?php if ($mode == 'update') echo $result['discount']; ?>">
 				<span class="input-group-addon">%</span>
+				<input id='discount' name='discount' class='form-control input-sm' style="display:inline-block" type='text' placeholder='If no discount, leave blank' value="<?php if ($mode == 'update') echo $result['discount']; ?>">
 			</div>
 		</div>
 		<div class="col-xs-4 col-sm-4 col-md-4">
@@ -256,8 +256,6 @@
 		if($('#order_no').val()=='') return false;
 		else if($('#customer_name').val()=='') return false;
 		else if($('#date').val()=='') return false;
-		else if($('#receive_date').val()=='') return false;
-		else if($('#down_payment').val()=='') return false;
 		else return true;
 	}
 	
@@ -272,6 +270,10 @@
 	function checkout(){
 		var form_header = $(".form_header")[0];
 		var formData = new FormData(form_header);
+		if($('#payment').val() == ''){
+			alert('Please fill Cash!')
+			return false;
+		}
 		$.ajax({
 			type: "POST",
 			data: formData,
@@ -280,7 +282,7 @@
 			url: "<?php echo base_url();?>transaction/checkout/order_no/<?php echo $result['order_no']; ?>",
 			success: function(response) {
 				window.open('<?php echo base_url(); ?>transaction/print_out/order_no/<?php echo $result['order_no']; ?>','_blank');
-				window.open('<?php echo base_url(); ?>billed_transaction','_parent');
+				// window.open('<?php //echo base_url(); ?>billed_transaction','_parent');
 			},
 			error: function(response){
 				alert('save header error');

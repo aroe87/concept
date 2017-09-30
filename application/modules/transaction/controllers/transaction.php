@@ -117,22 +117,28 @@ class Transaction extends MX_Controller {
 		foreach($_POST as $key => $value){
 			$data[$key] = $this->input->post($key);
 		}
-		
-		//die(print_r($data));
+
+		// die(print_r($data));
 		if ($data['id'] == '' || $data['id'] == null){
 			//mode insert;
-			$data['discount'] = ($data['discount']/100); //percentage
-			$this->qms_model->submitTableData('order_header',$data);
-			//$res = "Insert Success";
+			$data['discount'] = ($data['discount']/100); //percentage			
+			$data['id'] = $this->qms_model->getOrderID($data['order_no']);
+			// print_r($data);
+			if ($data['id'] == '' || $data['id'] == null){
+
+				$query = $this->qms_model->submitTableData('order_header',$data);
+			}
+			else{
+				//mode update;
+				$this->db->where('id', $data['id']);
+				$query = $this->db->update('order_header' ,$data);
+			}
 		}
 		else{
 			//mode update;
-			
-			$data['discount'] = ($data['discount']/100); //percentage
+			$data['discount'] = ($data['discount']/100); //percentage	
 			$this->db->where('id', $data['id']);
 			$query = $this->db->update('order_header' ,$data);
-			//if($query) $res = 'Update Success';
-			//else $res = 'Update Error';
 		}
 		
 	}
@@ -314,7 +320,6 @@ class Transaction extends MX_Controller {
 			// else $res = 'Update Error';
 		}
 		
-		$header['discount'] = ($data['discount']/100); //percentage
 		$header['subtotal'] = $this->qms_model->getTotal($order_no);
 		$this->db->where('id', $data['id_header']);
 		$query = $this->db->update('order_header' ,$header);
@@ -360,8 +365,8 @@ class Transaction extends MX_Controller {
 			$data[$key] = $this->input->post($key);
 		}
 
-		$data['status'] = 'CLOSED';
-		$data['flag_print'] = 'Y';
+		// $data['status'] = 'CLOSED';
+		// $data['flag_print'] = 'Y';
 		$data['discount'] = ($data['discount']/100); //percentage
 
 		$this->db->where('id', $data['id']);

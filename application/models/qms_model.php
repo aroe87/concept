@@ -364,7 +364,7 @@ class Qms_model extends CI_Model {
     }
 	
 	function getTransaction($id) {
-        $query = $this->DB->query("SELECT * from order_header where id = '$id'");
+        $query = $this->DB->query("SELECT *,floor(discount*100) as discount from order_header where id = '$id'");
         if ($query->num_rows() > 0) {
             $res = $query->row_array();
         }

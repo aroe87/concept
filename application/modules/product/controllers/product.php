@@ -78,7 +78,7 @@ class Product extends MX_Controller {
 		if ($data['id'] == '' || $data['id'] == null){
 			//mode insert;
 			
-			$data['product_id'] = str_pad("".$data['id_type']."", 3, '0', STR_PAD_LEFT).$this->generate_product_no();
+			$data['product_id'] = $this->generate_product_no();
 			$data['created_by'] = USER_ID;
 			$data['date_created'] = Date('Y-m-d');
 			
@@ -120,9 +120,10 @@ class Product extends MX_Controller {
 	}
 	
 	public function generate_product_no(){
-		$code_max = $this->qms_model->getMaxID('m_product');
+		$code_max = $this->qms_model->getMaxProductID('m_product');
 		
-		return str_pad("".$code_max."", 5, '0', STR_PAD_LEFT);
+		// return str_pad("".$code_max."", 5, '0', STR_PAD_LEFT);
+		return sprintf("%03s", $code_max);
 	}
 	
 	public function remove(){

@@ -175,8 +175,20 @@ class Qms_model extends CI_Model {
         return $res;
     }
 	
-	function getMaxID($table){
-		$query = $this->DB->query("SELECT max(id) as code_max FROM $table");
+    function getMaxID($table){
+        $query = $this->DB->query("SELECT max(id) as code_max FROM $table");
+        if( $query->num_rows() > 0)
+        {
+            $code_max = explode("/",$query->row()->code_max);
+            $code_max = $code_max[0] + 1;
+        }
+        else $code_max = "1";
+        
+        return $code_max;
+    }
+    
+	function getMaxProductID($table){
+		$query = $this->DB->query("SELECT max(product_id) as code_max FROM $table");
 		if( $query->num_rows() > 0)
 		{
 			$code_max = explode("/",$query->row()->code_max);

@@ -1,5 +1,9 @@
 <?php
-	// echo 'id = ' . $id;
+	// echo $mode;
+	// echo $id;
+	// echo $result['id'];
+	// echo $result['product_id'];
+	// echo $result['qty'];
 ?>
 <section class="content-header">
     <h1><small>Form Package Detail</small></h1>

@@ -44,6 +44,9 @@ class Receive_slip extends MX_Controller {
 						
 						$id = $this->uri->segment(6);
 						$arr = $this->qms_model->getReceiveSlipDetail($id);
+						foreach ($arr as $key => $field) {
+							$arr['sel_product'] = "<option value='".$arr['product_id']."'>".$this->qms_model->getProductName2($arr['product_id'])."</option>";
+						}
 						$form = 'form_detail';
 						$prod = $this->qms_model->getAllProduct();					
 					

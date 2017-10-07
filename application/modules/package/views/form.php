@@ -1,3 +1,7 @@
+<?php
+  echo $mode;
+  echo $result['id'];
+?>
 <section class="content-header">
     <h1><small>Form Package</small></h1>
     <ol class="breadcrumb">

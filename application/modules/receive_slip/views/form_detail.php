@@ -4,6 +4,7 @@
 	  // echo '</PRE>';
 	  // echo $result[0]['id'];
 	  // echo $result[0]['product_id']
+// echo $result['id'];
 ?>
 <section class="content-header">
     <h1><small>Receive Slip</small></h1>
@@ -18,7 +19,7 @@
                     <dt>Product</dt>
                     <dd>
                         <select id="product_id" name="product_id" class="form-control" style="width:300px" onChange="get_Price()" data-placeholder="Select Product">
-                            <?php if ($mode == 'update') echo $result['product_id'];
+                            <?php if ($mode == 'update') echo $result['sel_product'];
                             else echo "<option></option>"; ?>
                         </select>
                     </dd>
@@ -51,7 +52,7 @@
 			data : <?php echo $all_product; ?>
 		});
 
-		$("#qty").val('');
+		if ($mode != 'update')  $("#qty").val('');
 	});
 
 	function get_Price() {

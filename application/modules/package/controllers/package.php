@@ -57,9 +57,9 @@ class Package extends MX_Controller {
 			$mode = "update";
 			
 			$id = $this->uri->segment(6);
-			$arr = $this->qms_model->getPackageDetail($id);
+			$arr = $this->qms_model->getPackageDetailByID($id);
 			foreach ($arr as $key => $field) {
-				$arr[$key]['action'] = "<a class='remove' href='#'><i class='glyphicon glyphicon-remove'></a>";
+				$arr['sel_product'] = "<option value='".$arr['product_id']."'>".$this->qms_model->getProductName2($arr['product_id'])."</option>";
 			}
 			$data['result'] = $arr;
 		}
@@ -72,8 +72,8 @@ class Package extends MX_Controller {
 		$product = $this->qms_model->getAllProduct();
 		
 		foreach($product as $item => $field){
-			$product[$item]['id'] = $product[$item]['id'];
-			$product[$item]['text'] = $product[$item]['description'];
+			$product[$item]['id'] = $product[$item]['product_id'];
+			$product[$item]['text'] = $product[$item]['product_id'] . ' - ' . $product[$item]['description'];
 		}
 		
 		$data['all_product'] = json_encode($product);

@@ -243,10 +243,21 @@ class Qms_model extends CI_Model {
         return $res;
     }
     
-	function getPackageDetail($id) {
+    function getPackageDetail($id) {
         $query = $this->DB->query("SELECT * from mpd where id_header = $id");
         if ($query->num_rows() > 0) {
             $res = $query->result_array();
+        }
+        else
+            $res = array();
+
+        return $res;
+    }
+    
+	function getPackageDetailByID($id) {
+        $query = $this->DB->query("SELECT * from mpd where id = $id");
+        if ($query->num_rows() > 0) {
+            $res = $query->row_array();
         }
         else
             $res = array();
@@ -301,7 +312,7 @@ class Qms_model extends CI_Model {
     function getReceiveSlipDetail($id) {
         $query = $this->DB->query("SELECT * from rsd where id = '$id'");
         if ($query->num_rows() > 0) {
-            $res = $query->result_array();
+            $res = $query->row_array();
         }
         else
             $res = array();
@@ -343,7 +354,7 @@ class Qms_model extends CI_Model {
     }
     
 	function getProductName2($id) {
-        $query = $this->DB->query("SELECT description as result from m_product where id = $id");
+        $query = $this->DB->query("SELECT description as result from m_product where id = '$id'");
         if ($query->num_rows() > 0) {
             $res = $query->row()->result;
         }
